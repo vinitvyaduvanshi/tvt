@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>True Value Talks Booking</title>
+<style>
+  :root{
+    --bg:#0b1420; --panel:#0f1826; --muted:#9fb3c8;
+    --available:#2bb3c0; --selected:#22c55e; --occupied:#c24141;
+    --premiumRing:#f5d26b; --text:#e9f1fb; --disabled:#2b3647;
+    --gold1:#f7e39a; --gold2:#e7c353; --gold3:#b8860b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; background:radial-gradient(1000px 600px at 50% -200px,#23354a 0%, #0b1420 50%, #0b1420 100%); color:var(--text)}
+  .wrap{max-width:1080px; margin:28px auto; padding:0 16px}
+  .title{ text-align:center; margin-bottom:6px; font-weight:800; font-size:34px; letter-spacing:.4px; color:#ffd447; text-shadow:0 2px 20px rgba(255,212,71,.15)}
+  .subtitle{ text-align:center; color:var(--muted); margin-bottom:22px; letter-spacing:.2px}
+  .screen{margin:14px auto 8px; width:78%; height:36px; border-radius:0 0 40px 40px; background:linear-gradient(#e6ebf3,#9ea9ba); box-shadow:0 14px 26px rgba(0,0,0,.35) inset}
+  .rowNumbers{ display:flex; justify-content:center; gap:12px; color:#a7b6c9; font-size:13px; margin:6px 0 18px}
+
+  .panel{background:var(--panel); border:1px solid #1f2a3a; border-radius:16px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .gridWrap{ display:grid; grid-template-columns:auto 1fr 36px 1fr auto; gap:22px; align-items:start}
+  .sectionTitle{color:#d9e4f2; margin:6px 0 8px; font-weight:700; letter-spacing:.4px}
+  .rows{ display:grid; gap:8px}
+
+  .row{ display:grid; grid-template-columns:28px repeat(10, 1fr); align-items:center; gap:8px}
+  .row.right{ grid-template-columns:28px repeat(10, 1fr)}
+  .rowLabel{ color:#d5dfec; font-weight:700; text-align:center; opacity:.9}
+
+  /* Seat styles */
+  .seat{
+    width:26px; height:26px; border-radius:7px; display:inline-grid; place-items:center;
+    font-size:10px; font-weight:600;
+    color:#0b1420; cursor:pointer; user-select:none; border:1px solid #1e2a3a;
+    box-shadow:0 3px 8px rgba(0,0,0,.25);
+    transition:transform .08s ease, box-shadow .12s ease, outline-color .12s ease;
+  }
+  .seat.available{ background:var(--available) }
+  .seat.selected{ background:var(--selected); color:#08210f; transform:translateY(-1px) }
+  .seat.occupied{ background:var(--occupied); color:#ffdede; cursor:not-allowed; filter:saturate(.9) }
+
+  /* PREMIUM LUX FEEL (back K–T) */
+  .seat.premium.available {
+    background:linear-gradient(145deg, var(--gold1), var(--gold2));
+    border:1px solid #705d1a;
+    color:#3a2a05;
+    box-shadow:0 0 0 2px rgba(245,210,107,.25), 0 6px 16px rgba(0,0,0,.35);
+  }
+  .seat.premium.selected {
+    background:var(--selected);
+    color:#08210f;
+    box-shadow:0 0 0 2px rgba(60,255,160,.5), 0 6px 16px rgba(0,0,0,.45);
+  }
+
+  /* Center vertical aisle */
+  .aisleV{ width:36px; height:100%; background:repeating-linear-gradient( to bottom, #0e1a2a, #0e1a2a 8px, #0d1624 8px, #0d1624 16px ); border-radius:8px; border:1px solid #243248; opacity:.9 }
+
+  /* Horizontal aisle (between J and K) */
+  .aisleH{
+    grid-column: 1 / -1;
+    height:18px; margin:8px 0 6px;
+    background:repeating-linear-gradient( 90deg, #0e1a2a, #0e1a2a 12px, #0d1624 12px, #0d1624 24px );
+    border:1px solid #243248; border-radius:8px; opacity:.95
+  }
+
+  .legend{ display:flex; gap:18px; flex-wrap:wrap; align-items:center; color:#c8d6e8; font-size:14px}
+  .dot{ width:14px; height:14px; border-radius:4px; display:inline-block; margin-right:6px; vertical-align:middle }
+  .dot.premium{ background:linear-gradient(145deg, var(--gold1), var(--gold2)); border:1px solid #705d1a }
+
+  .box{ background:#0c1624; border:1px solid #1f2a3a; border-radius:14px; padding:16px}
+  .priceRow{ display:flex; justify-content:space-between; align-items:center; gap:16px; margin-top:10px; color:#e7eef8}
+  .pill{ background:#0d1a2a; border:1px solid #263244; border-radius:999px; padding:8px 12px; color:#cfe2ff; font-weight:700 }
+  .footer{ margin-top:16px; display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap }
+  .btn{
+    background:linear-gradient(135deg, #ffd867, #ffcc39); color:#1a1302; border:none; border-radius:10px; padding:12px 18px; font-weight:800; letter-spacing:.4px;
+    box-shadow:0 8px 18px rgba(247,206,84,.25); cursor:pointer
+  }
+  .btn:disabled{ background:#7c7c7c; color:#1e1e1e; cursor:not-allowed; opacity:.6; box-shadow:none }
+  .muted{ color:var(--muted) }
+
+  /* Inline checkout */
+  .checkout{ display:none; margin-top:14px; }
+  .checkout.open{ display:block; animation:slideDown .2s ease-out }
+  @keyframes slideDown{ from { opacity:0; transform:translateY(-6px)} to {opacity:1; transform:translateY(0)} }
+  .checkoutGrid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px }
+  .qr{ background:#0e1a2a; border:1px dashed #34465f; border-radius:12px; padding:14px; text-align:center }
+  .qr img{ max-width:100%; border-radius:10px }
+  label{ display:block; margin:.6rem 0 .3rem; color:#dfe8f6; font-weight:600 }
+  input, .file{
+    width:100%; background:#0d1624; color:#e8f2ff; border:1px solid #263247; border-radius:10px; padding:10px 12px; outline:none
+  }
+  .file{ padding:12px; }
+  .rowFlex{ display:flex; gap:12px }
+  .danger{ color:#ffb5b5 }
+  .success{ color:#65e0a3 }
+  hr{ border:none; border-top:1px solid #223047; margin:12px 0 }
+  .tiny{ font-size:12px }
+
+  .banner{ margin-top:10px; padding:10px 12px; border-radius:10px; border:1px solid #2a3a52; background:#0e1a2a }
+  .banner.success{ border-color:#1f6b46; background:#0d2019; color:#8ef1bf }
+
+  @media (max-width:920px){
+    .gridWrap{ grid-template-columns:auto 1fr 24px 1fr auto }
+    .checkoutGrid{ grid-template-columns:1fr }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title">True Value Talks Booking</div>
+  <div class="subtitle">Front 200: Primary • Back 200: Premium (Luxury)</div>
+  <div class="screen"></div>
+  <div class="rowNumbers" id="rowNumbers"></div>
+
+  <div class="panel">
+    <div class="gridWrap">
+      <div></div>
+      <div>
+        <div class="sectionTitle">LEFT BLOCK</div>
+        <div class="rows" id="leftRows"></div>
+      </div>
+      <div class="aisleV"></div>
+      <div>
+        <div class="sectionTitle">RIGHT BLOCK</div>
+        <div class="rows" id="rightRows"></div>
+      </div>
+      <div></div>
+    </div>
+
+    <div class="box" style="margin-top:12px">
+      <div class="legend">
+        <span><i class="dot" style="background:var(--available)"></i>Primary</span>
+        <span><i class="dot premium"></i>Premium (Luxury)</span>
+        <span><i class="dot" style="background:var(--selected)"></i>Selected</span>
+        <span><i class="dot" style="background:var(--occupied)"></i>Occupied</span>
+      </div>
+      <div class="priceRow">
+        <div>
+          <div>Pricing</div>
+          <div class="tiny muted">Primary (A–J): ₹499 | Premium (K–T): ₹999</div>
+        </div>
+        <div class="pill">
+          Selected: <span id="selCount">0</span> | Total: ₹<span id="total">0</span>
+        </div>
+      </div>
+      <div class="footer">
+        <div class="muted tiny">Tip: Center aisle divides left/right. Large aisle between J & K.</div>
+        <button id="bookBtn" class="btn" disabled>BOOK NOW</button>
+      </div>
+
+      <div id="checkout" class="checkout box">
+        <h3>Scan & Pay</h3>
+        <div class="checkoutGrid">
+          <div class="qr">
+            <img src="qr.jpg" alt="Payment QR"/>
+            <div class="tiny muted">Scan and upload payment proof below.</div>
+            <hr/>
+            <div>Seats: <b id="ckSeats">-</b></div>
+            <div>Total: ₹<b id="ckTotal">0</b></div>
+          </div>
+          <div>
+            <form id="payForm" enctype="multipart/form-data">
+              <div class="rowFlex">
+                <div style="flex:1">
+                  <label>Email</label>
+                  <input type="email" name="email" required/>
+                </div>
+                <div style="flex:1">
+                  <label>Phone</label>
+                  <input type="tel" name="phone" required/>
+                </div>
+              </div>
+              <label>Payment Screenshot</label>
+              <input class="file" type="file" name="screenshot" accept="image/*" required/>
+              <input type="hidden" name="seats"/>
+              <input type="hidden" name="amount"/>
+              <div style="display:flex; gap:10px; margin-top:12px">
+                <button type="button" id="cancelCheckout" class="btn" style="background:#2b3647;color:#cfe2ff;">Cancel</button>
+                <button type="submit" class="btn">Submit</button>
+              </div>
+              <div id="payResp" class="tiny" style="margin-top:8px"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div id="msg" class="tiny muted" style="margin-top:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = "http://localhost:4000";
+const ROWS = "ABCDEFGHIJKLMNOPQRST".split("");
+const PER_ROW = 20;
+const FRONT_ROWS = new Set("ABCDEFGHIJ".split(""));
+const BACK_ROWS  = new Set("KLMNOPQRST".split(""));
+const PRICE_PRIMARY = 499;
+const PRICE_PREMIUM = 999;
+
+let seatStatus = new Map();
+let selected = new Set();
+
+const byId = id => document.getElementById(id);
+const seatLabel = (row, n) => `${row}${n}`;
+const currency = n => (n||0).toLocaleString("en-IN");
+const isPremium = row => BACK_ROWS.has(row);
+const priceForRow = row => isPremium(row)?PRICE_PREMIUM:PRICE_PRIMARY;
+
+function splitLeftRight(){
+  const left={}, right={};
+  for(const r of ROWS){
+    left[r]=Array.from({length:10},(_,i)=>i+1);
+    right[r]=Array.from({length:10},(_,i)=>i+11);
+  }
+  return [left,right];
+}
+
+function buildRow(row, nums, container){
+  const rowDiv=document.createElement("div");
+  rowDiv.className="row";
+  const label=document.createElement("div");
+  label.className="rowLabel";
+  label.textContent=row;
+  rowDiv.appendChild(label);
+  nums.forEach(n=>{
+    const lab=seatLabel(row,n);
+    const btn=document.createElement("div");
+    btn.className="seat";
+    if(isPremium(row)) btn.classList.add("premium");
+    const status=seatStatus.get(lab)||"available";
+    btn.classList.add(status==="occupied"?"occupied":"available");
+    btn.title=(isPremium(row)?"Premium":"Primary")+" - "+lab;
+    btn.textContent=n;
+    btn.dataset.label=lab;
+    btn.addEventListener("click",()=>{
+      if(btn.classList.contains("occupied")) return;
+      if(btn.classList.contains("selected")){
+        btn.classList.remove("selected");
+        selected.delete(lab);
+      }else{
+        btn.classList.add("selected");
+        selected.add(lab);
+      }
+      updateTotals();
+    });
+    rowDiv.appendChild(btn);
+  });
+  container.appendChild(rowDiv);
+  if(row==="J"){ const gap=document.createElement("div"); gap.className="aisleH"; container.appendChild(gap); }
+}
+
+async function loadSeats(){
+  try{
+    const res=await fetch(`${API_BASE}/api/seats`);
+    const data=await res.json();
+    seatStatus.clear(); data.forEach(s=>seatStatus.set(s.label,s.status));
+  }catch{ byId("msg").textContent="Failed to load seats"; }
+}
+
+function renderGrid(){
+  const [L,R]=splitLeftRight();
+  const left=byId("leftRows"), right=byId("rightRows");
+  left.innerHTML=""; right.innerHTML="";
+  for(const r of ROWS){ buildRow(r,L[r],left); buildRow(r,R[r],right); }
+}
+
+function updateTotals(){
+  let total=0; for(const lab of selected){ total+=priceForRow(lab[0]); }
+  byId("selCount").textContent=selected.size;
+  byId("total").textContent=currency(total);
+  byId("bookBtn").disabled=selected.size===0;
+  const labs=[...selected].sort();
+  byId("ckSeats").textContent=labs.join(", ")||"-";
+  byId("ckTotal").textContent=currency(total);
+  const f=byId("payForm"); f.seats.value=labs.join(","); f.amount.value=total;
+}
+
+function toggleCheckout(open){
+  const box=byId("checkout");
+  if(open){ updateTotals(); box.classList.add("open"); }
+  else{ box.classList.remove("open"); const f=byId("payForm"); f.reset(); }
+}
+
+async function submitBooking(fd){
+  const r=await fetch(`${API_BASE}/api/bookings`,{method:"POST",body:fd});
+  const d=await r.json(); if(!r.ok) throw new Error(d.error||"Booking failed");
+  return d;
+}
+
+(async function init(){ await loadSeats(); renderGrid(); updateTotals(); })();
+byId("bookBtn").onclick=()=>selected.size&&toggleCheckout(true);
+byId("cancelCheckout").onclick=()=>toggleCheckout(false);
+
+byId("payForm").onsubmit=async e=>{
+  e.preventDefault();
+  const out=byId("payResp"); out.textContent="";
+  if(!selected.size){ out.textContent="Select at least one seat"; out.classList.add("danger"); return;}
+  const fd=new FormData(e.target);
+  try{
+    const resp=await submitBooking(fd);
+    const msg=byId("msg");
+    msg.className="banner success";
+    msg.innerHTML=`✅ Booking submitted! ID: <b>${resp.bookingId}</b> (Pending verification)`;
+    setTimeout(()=>msg.textContent="",8000);
+    selected.clear(); updateTotals(); toggleCheckout(false);
+    await loadSeats(); renderGrid();
+  }catch(err){
+    out.textContent=err.message; out.classList.add("danger");
+  }
+};
+</script>
+</body>
+</html>
