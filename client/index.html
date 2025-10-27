@@ -192,7 +192,7 @@
 
 <script>
 // const API_BASE = "http://localhost:4000";
-const API_BASE = "https://tvt-nxgw.onrender.com/";
+const API_BASE = "https://tvt-nxgw.onrender.com";  
 
 const ROWS = "ABCDEFGHIJKLMNOPQRST".split("");
 const PER_ROW = 20;
@@ -255,11 +255,24 @@ function buildRow(row, nums, container){
 
 async function loadSeats(){
   try{
-    const res=await fetch(`${API_BASE}/api/seats`);
-    const data=await res.json();
-    seatStatus.clear(); data.forEach(s=>seatStatus.set(s.label,s.status));
-  }catch{ byId("msg").textContent="Failed to load seats"; }
+    const res = await fetch(`${API_BASE}/api/seats`, {
+      headers: { "Accept": "application/json" }
+    });
+    if (!res.ok) {
+      const txt = await res.text().catch(()=>"");
+      throw new Error(`GET /api/seats -> ${res.status} ${txt}`);
+    }
+    const data = await res.json();
+    seatStatus.clear();
+    data.forEach(s => seatStatus.set(s.label, s.status));
+  }catch(err){
+    const msg = byId("msg");
+    msg.textContent = `Failed to load seats: ${err.message}`;
+    msg.className = "banner error";
+    console.error(err);
+  }
 }
+
 
 function renderGrid(){
   const [L,R]=splitLeftRight();
