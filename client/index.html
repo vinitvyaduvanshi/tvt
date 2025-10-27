@@ -16,7 +16,21 @@
   .wrap{max-width:1080px; margin:28px auto; padding:0 16px}
   .title{ text-align:center; margin-bottom:6px; font-weight:800; font-size:34px; letter-spacing:.4px; color:#ffd447; text-shadow:0 2px 20px rgba(255,212,71,.15)}
   .subtitle{ text-align:center; color:var(--muted); margin-bottom:22px; letter-spacing:.2px}
-  .screen{margin:14px auto 8px; width:78%; height:36px; border-radius:0 0 40px 40px; background:linear-gradient(#e6ebf3,#9ea9ba); box-shadow:0 14px 26px rgba(0,0,0,.35) inset}
+
+  /* Stage (screen) */
+  .screen{
+    position:relative;
+    margin:14px auto 8px; width:78%; height:56px;
+    border-radius:0 0 40px 40px;
+    background:linear-gradient(#e6ebf3,#9ea9ba);
+    box-shadow:0 14px 26px rgba(0,0,0,.35) inset
+  }
+  .screenText{
+    position:absolute; inset:0; display:grid; place-items:center;
+    font-weight:900; font-size:16px; letter-spacing:.3px; text-transform:none;
+    color:#1a2433; text-shadow:0 1px 0 rgba(255,255,255,.55);
+  }
+
   .rowNumbers{ display:flex; justify-content:center; gap:12px; color:#a7b6c9; font-size:13px; margin:6px 0 18px}
 
   .panel{background:var(--panel); border:1px solid #1f2a3a; border-radius:16px; padding:18px; box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -109,8 +123,12 @@
 <body>
 <div class="wrap">
   <div class="title">True Value Talks Booking</div>
-  <div class="subtitle">Front 200: Primary • Back 200: Premium (Luxury)</div>
-  <div class="screen"></div>
+  <div class="subtitle">TVT Udaan - 3rd Dec 2025, Wed</div>
+
+  <div class="screen">
+    <div class="screenText">Stage - Astro + Healer + Coach,...</div>
+  </div>
+
   <div class="rowNumbers" id="rowNumbers"></div>
 
   <div class="panel">
@@ -272,7 +290,6 @@ async function loadSeats(){
     console.error(err);
   }
 }
-
 
 function renderGrid(){
   const [L,R]=splitLeftRight();
